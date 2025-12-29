@@ -1,0 +1,13 @@
+{
+    "name":  "@kristianek93/yebeti",
+    "appName":  "YebeTi",
+    "version":  "0.1.0",
+    "description":  "YebeTi – TizenBrew module (launcher menu for YouTube TV / TizenTube).",
+    "packageType":  "mods",
+    "main":  "dist/userScript.js",
+    "author":  "kristianek93",
+    "repository":  {
+                       "url":  "https://github.com/kristianek93/YebeTi"
+                   },
+    "license":  "MIT"
+}
