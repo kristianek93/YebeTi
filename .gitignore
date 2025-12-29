@@ -1,0 +1,8 @@
+﻿.buildResult/
+.build/
+.sign/
+.package/
+.project
+.tproject
+.settings/
+*.wgt
