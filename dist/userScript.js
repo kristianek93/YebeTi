@@ -1,7 +1,6 @@
-(() => {
+﻿(() => {
   const log = (...a) => { try { console.log("[YebeTi]", ...a); } catch(e){} };
 
-  // jednoduché menu (overlay)
   function showMenu() {
     if (document.getElementById("yebeti-overlay")) return;
 
@@ -30,7 +29,7 @@
     box.innerHTML = `
       <div style="font-size:28px; font-weight:700; margin-bottom:12px;">YebeTi</div>
       <div style="font-size:16px; opacity:0.9; margin-bottom:18px;">
-        Vyber, kam přejít. (Zavřeš: BACK/ESC)
+        Otevři: dlouhý ENTER/OK. Zavřeš: BACK.
       </div>
       <div style="display:flex; gap:14px; flex-wrap:wrap;">
         <button id="yebeti-yt" style="font-size:18px; padding:14px 18px; border-radius:12px; border:0; cursor:pointer;">
@@ -39,9 +38,6 @@
         <button id="yebeti-tt" style="font-size:18px; padding:14px 18px; border-radius:12px; border:0; cursor:pointer;">
           TizenTube (localhost dial)
         </button>
-      </div>
-      <div style="margin-top:14px; font-size:13px; opacity:0.7;">
-        Tip: menu otevřeš klávesou F2 (na některých ovladačích funguje i INFO).
       </div>
     `;
 
@@ -55,18 +51,48 @@
     document.getElementById("yebeti-tt").onclick = () =>
       go("https://youtube.com/tv?additionalDataUrl=http%3A%2F%2Flocalhost%3A8085%2Fdial%2Fapps%2FYouTube");
 
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" || e.key === "Backspace") close();
-    }, { once:false });
+    const onKey = (e) => {
+      const k = e.key;
+      // zavření overlaye
+      if (k === "Escape" || k === "Backspace" || k === "BrowserBack" || k === "Back") close();
+    };
+    window.addEventListener("keydown", onKey);
   }
 
-  // hotkey: F2 otevře menu (na TV může být jiná mapovaná klávesa, ale F2 je bezpečná)
+  // LONG PRESS detector: Enter/OK (fallback i Space)
+  let downAt = 0;
+  let downKey = "";
+
+  function isOkKey(e) {
+    return (
+      e.key === "Enter" ||
+      e.key === "OK" ||
+      e.code === "Enter" ||
+      e.key === " " ||
+      e.code === "Space"
+    );
+  }
+
   window.addEventListener("keydown", (e) => {
-    if (e.key === "F2") {
-      e.preventDefault();
+    if (!isOkKey(e)) return;
+    if (downAt) return; // už držíš
+    downAt = Date.now();
+    downKey = e.key || e.code || "Enter";
+  });
+
+  window.addEventListener("keyup", (e) => {
+    if (!downAt) return;
+    if (!isOkKey(e)) return;
+
+    const ms = Date.now() - downAt;
+    downAt = 0;
+
+    // dlouhý stisk = menu (650ms je fajn kompromis)
+    if (ms >= 650) {
+      try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
       showMenu();
     }
   });
 
-  log("loaded. Press F2 to open YebeTi menu.");
+  log("loaded. Long-press ENTER/OK to open YebeTi menu.");
 })();
