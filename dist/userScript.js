@@ -29,7 +29,7 @@
     box.innerHTML = `
       <div style="font-size:28px; font-weight:700; margin-bottom:12px;">YebeTi</div>
       <div style="font-size:16px; opacity:0.9; margin-bottom:18px;">
-        Otevři: dlouhý ENTER/OK. Zavřeš: BACK.
+        Vyber, kam přejít. (Zavřeš: BACK)
       </div>
       <div style="display:flex; gap:14px; flex-wrap:wrap;">
         <button id="yebeti-yt" style="font-size:18px; padding:14px 18px; border-radius:12px; border:0; cursor:pointer;">
@@ -38,6 +38,9 @@
         <button id="yebeti-tt" style="font-size:18px; padding:14px 18px; border-radius:12px; border:0; cursor:pointer;">
           TizenTube (localhost dial)
         </button>
+      </div>
+      <div style="margin-top:14px; font-size:13px; opacity:0.7;">
+        Otevření menu: podrž BACK (cca 0.7s) nebo podrž ▶⏸. Rychlé otevření: WWW.
       </div>
     `;
 
@@ -51,48 +54,50 @@
     document.getElementById("yebeti-tt").onclick = () =>
       go("https://youtube.com/tv?additionalDataUrl=http%3A%2F%2Flocalhost%3A8085%2Fdial%2Fapps%2FYouTube");
 
-    const onKey = (e) => {
-      const k = e.key;
-      // zavření overlaye
-      if (k === "Escape" || k === "Backspace" || k === "BrowserBack" || k === "Back") close();
-    };
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", (e) => {
+      // zavření menu na BACK
+      if (e.key === "Backspace" || e.key === "BrowserBack" || e.key === "Back") close();
+    }, { once:false });
   }
 
-  // LONG PRESS detector: Enter/OK (fallback i Space)
   let downAt = 0;
   let downKey = "";
 
-  function isOkKey(e) {
+  function isTriggerKey(e) {
     return (
-      e.key === "Enter" ||
-      e.key === "OK" ||
-      e.code === "Enter" ||
-      e.key === " " ||
-      e.code === "Space"
+      e.key === "Backspace" || e.key === "BrowserBack" || e.key === "Back" ||
+      e.key === "MediaPlayPause" || e.code === "MediaPlayPause" ||
+      e.key === "WWW"
     );
   }
 
+  // dlouhý stisk BACK / ▶⏸ otevře menu, WWW otevře hned
   window.addEventListener("keydown", (e) => {
-    if (!isOkKey(e)) return;
-    if (downAt) return; // už držíš
+    if (!isTriggerKey(e)) return;
+
+    if (e.key === "WWW") {
+      try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+      showMenu();
+      return;
+    }
+
+    if (downAt) return;
     downAt = Date.now();
-    downKey = e.key || e.code || "Enter";
-  });
+    downKey = e.key;
+  }, { capture:true });
 
   window.addEventListener("keyup", (e) => {
     if (!downAt) return;
-    if (!isOkKey(e)) return;
+    if (!isTriggerKey(e)) return;
 
     const ms = Date.now() - downAt;
     downAt = 0;
 
-    // dlouhý stisk = menu (650ms je fajn kompromis)
-    if (ms >= 650) {
+    if (ms >= 700) {
       try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
       showMenu();
     }
-  });
+  }, { capture:true });
 
-  log("loaded. Long-press ENTER/OK to open YebeTi menu.");
+  log("loaded. Hold BACK or Play/Pause for menu, or press WWW.");
 })();
